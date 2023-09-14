@@ -18,10 +18,21 @@
             align-items: center;
             justify-content: center;
             border: 1px solid black;
+            font-size: 24px;
         }
     </style>
 </head>
 <body>
+    <div>
+        Banca: R$ <span id="bankAmount">0</span>
+    </div>
+    <div>
+        Depositar: <input type="number" id="depositAmount" value="10"> Reais <button onclick="deposit()">Depositar</button>
+    </div>
+    <div>
+        Valor da Aposta: <input type="number" id="betValue" value="10"> Reais
+    </div>
+
     <div id="gameArea">
         <!-- 9 símbolos na grade 3x3 -->
         <div class="symbol" id="s0"></div>
@@ -40,27 +51,47 @@
     <button onclick="autoPlay()">Modo Automático</button>
 
     <script>
-        const symbols = ["Laranja", "Sino Azul", "Envelope Vermelho", "Saco de Moedas", "Adorno Jade", "Enfeite Dourado", "Wild"];
+        const symbols = ["🍊", "🔔", "🧧", "💰", "🟢", "🏆", "🐯"];
         const payouts = [3, 5, 8, 10, 25, 100, 250];
         let turboMode = false;
+        let bank = 0;
+
+        function updateBankDisplay() {
+            document.getElementById("bankAmount").innerText = bank.toFixed(2);
+        }
+
+        function deposit() {
+            const depositValue = parseFloat(document.getElementById("depositAmount").value);
+            bank += depositValue;
+            updateBankDisplay();
+        }
 
         function getRandomSymbol() {
             return symbols[Math.floor(Math.random() * symbols.length)];
         }
 
         function startGame() {
+            const betValue = parseFloat(document.getElementById("betValue").value);
+            if (bank < betValue) {
+                alert("Saldo insuficiente! Por favor, deposite mais dinheiro.");
+                return;
+            }
+            bank -= betValue;
             for (let i = 0; i < 9; i++) {
                 document.getElementById(`s${i}`).innerText = getRandomSymbol();
             }
-            checkWin();
+            checkWin(betValue);
+            updateBankDisplay();
         }
 
-        function checkWin() {
-            // Verificar combinações vencedoras (simplificado)
+        function checkWin(betValue) {
             for (let i = 0; i < 3; i++) {
-                if (document.getElementById(`s${i*3}`).innerText === document.getElementById(`s${i*3 + 1}`).innerText &&
-                    document.getElementById(`s${i*3}`).innerText === document.getElementById(`s${i*3 + 2}`).innerText) {
-                    alert(`Você ganhou com ${document.getElementById(`s${i*3}`).innerText} na linha ${i+1}!`);
+                const symbol = document.getElementById(`s${i*3}`).innerText;
+                if (symbol === document.getElementById(`s${i*3 + 1}`).innerText &&
+                    symbol === document.getElementById(`s${i*3 + 2}`).innerText) {
+                    const winAmount = betValue * payouts[symbols.indexOf(symbol)];
+                    bank += winAmount;
+                    alert(`Você ganhou R$ ${winAmount.toFixed(2)} com ${symbol} na linha ${i+1}!`);
                 }
             }
         }
@@ -78,6 +109,8 @@
                 }, turboMode ? 500 : 1000 * i);
             }
         }
+
+        updateBankDisplay();
     </script>
 </body>
 </html>
