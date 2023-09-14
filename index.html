@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Preço de Venda</title>
+</head>
+<body>
+    <h2>Calculadora de Preço de Venda de Brigadeiros</h2>
+    <form id="calculatorForm">
+        Custo dos ingredientes: R$ <input type="number" id="custo_ingredientes"><br><br>
+        Custo da embalagem: R$ <input type="number" id="custo_embalagem"><br><br>
+        Custo de energia: R$ <input type="number" id="custo_energia"><br><br>
+        Outros custos: R$ <input type="number" id="outros_custos"><br><br>
+        Quantidade de brigadeiros: <input type="number" id="quantidade_brigadeiros"><br><br>
+        Margem de lucro (%): <input type="number" id="margem_lucro"><br><br>
+        <button type="button" onclick="calcular()">Calcular</button>
+    </form>
+    <h3>Resultados:</h3>
+    <p>Custo por brigadeiro: R$ <span id="custo_por_brigadeiro">0.00</span></p>
+    <p>Preço de venda sugerido por brigadeiro: R$ <span id="preco_venda">0.00</span></p>
+
+    <script src="script.js"></script>
+</body>
+</html>
