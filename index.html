@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo do Tigrinho do Paulo</title>
+    <title>Jogo do Alien Script</title>
     <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
+            background-image: linear-gradient(120deg, #D35400 0%, #E67E22 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -15,13 +20,12 @@
         }
 
         h1 {
-            color: #333;
-            background-color: #fff;
+            color: #fff;
+            background-color: #333;
             padding: 10px 20px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
-            font-size: 24px;
+            font-size: 28px;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
@@ -31,31 +35,31 @@
             grid-template-columns: repeat(3, 100px);
             gap: 15px;
             margin-bottom: 20px;
-            border: 3px solid #333;
+            border: 3px solid #555;
             padding: 15px;
             border-radius: 10px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #eee;
         }
 
         .symbol {
-            width: 100px;
-            height: 100px;
+            width: 90px;
+            height: 90px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid #ddd;
+            border: 2px solid #bbb;
             border-radius: 10px;
-            font-size: 24px;
+            font-size: 28px;
             background-color: #f9f9f9;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s;
         }
 
         button {
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
-            background-color: #333;
+            background-color: #555;
             color: #fff;
             cursor: pointer;
             margin: 5px;
@@ -63,7 +67,7 @@
         }
 
         button:hover {
-            background-color: #555;
+            background-color: #777;
         }
 
         input[type="number"] {
@@ -75,14 +79,44 @@
 
         div {
             margin-bottom: 20px;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    
+
+        /* Estilos para a mensagem de vitória */
+        #winMessage {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: #ffeb3b;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px 2px rgba(0, 0, 0, 0.2);
+            font-size: 24px;
+            text-align: center;
+            z-index: 10;
+            display: none;
+            animation: fadeInOut 2s forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
         }
     </style>
 </head>
+
 <body>
-    <h1>FORTUNE TIGER PAULO</h1>
+    <h1>Script Alien 👽</h1>
 
     <div>
-        Banca: R$ <span id="bankAmount">0</span>
+        Banca: R$ <span id="bankAmount">0,00</span>
     </div>
     <div>
         Depositar: <input type="number" id="depositAmount" value="10"> Reais <button onclick="deposit()">Depositar</button>
@@ -104,18 +138,26 @@
         <div class="symbol" id="s8"></div>
     </div>
 
-    <button onclick="startGame()">Iniciar Jogo</button>
+    <button id="startButton" onclick="startGame()">Iniciar Jogo</button>
     <button onclick="toggleTurbo()">Modo Turbo</button>
     <button onclick="autoPlay()">Modo Automático</button>
 
+    <!-- Mensagem de vitória -->
+    <div id="winMessage"></div>
+
     <script>
-        const symbols = ["🍊", "🔔", "🧧", "💰", "🟢", "🏆", "🐯"];
+        const symbols = ["🍊", "🔔", "🧧", "💰", "🟢", "🏆", "👽"];
         const payouts = [3, 5, 8, 10, 25, 100, 250];
         let turboMode = false;
         let bank = 0;
+        const startButton = document.getElementById("startButton");
+
+        function formatToBRL(value) {
+            return value.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        }
 
         function updateBankDisplay() {
-            document.getElementById("bankAmount").innerText = bank.toFixed(2);
+            document.getElementById("bankAmount").innerText = formatToBRL(bank);
         }
 
         function deposit() {
@@ -129,46 +171,90 @@
         }
 
         function startGame() {
+            startButton.disabled = true;
             const betValue = parseFloat(document.getElementById("betValue").value);
             if (bank < betValue) {
                 alert("Saldo insuficiente! Por favor, deposite mais dinheiro.");
+                startButton.disabled = false;
                 return;
             }
+
             bank -= betValue;
+            const symbolDelay = turboMode ? 25 : 50;
             for (let i = 0; i < 9; i++) {
-                document.getElementById(`s${i}`).innerText = getRandomSymbol();
+                const symbolElement = document.getElementById(`s${i}`);
+                symbolElement.style.opacity = 0;
+                setTimeout(() => {
+                    symbolElement.innerText = getRandomSymbol();
+                    symbolElement.style.opacity = 1;
+                }, symbolDelay);
             }
-            checkWin(betValue);
-            updateBankDisplay();
+
+            setTimeout(() => {
+                checkWin(betValue);
+                updateBankDisplay();
+            }, turboMode ? 250 : 500);
         }
 
         function checkWin(betValue) {
+            let hasWon = false;
             for (let i = 0; i < 3; i++) {
                 const symbol = document.getElementById(`s${i*3}`).innerText;
                 if (symbol === document.getElementById(`s${i*3 + 1}`).innerText &&
                     symbol === document.getElementById(`s${i*3 + 2}`).innerText) {
+                    hasWon = true;
+                    highlightWinningRow(i);
                     const winAmount = betValue * payouts[symbols.indexOf(symbol)];
                     bank += winAmount;
-                    alert(`Você ganhou R$ ${winAmount.toFixed(2)} com ${symbol} na linha ${i+1}!`);
+                    const winMultiplier = payouts[symbols.indexOf(symbol)];
+                    const winMessage = `Você apostou R$ ${formatToBRL(betValue)} e ganhou R$ ${formatToBRL(winAmount)} com ${symbol} na linha ${i+1}! (${winMultiplier}x)`;
+                    displayWinMessage(winMessage);
                 }
             }
+
+            const delay = turboMode ? 1000 : 3000;
+            setTimeout(() => {
+                startButton.disabled = false;
+            }, hasWon ? delay : 0);
+        }
+
+        function highlightWinningRow(row) {
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`s${row*3 + i}`).style.backgroundColor = "#ffeb3b";
+            }
+            setTimeout(() => {
+                for (let i = 0; i < 3; i++) {
+                    document.getElementById(`s${row*3 + i}`).style.backgroundColor = "#f9f9f9";
+                }
+            }, turboMode ? 1000 : 2000);
         }
 
         function toggleTurbo() {
             turboMode = !turboMode;
-            alert(turboMode ? "Modo Turbo Ativado!" : "Modo Turbo Desativado!");
+            alert(turboMode ? "🚀 Modo Turbo Ativado!" : "🐌 Modo Turbo Desativado!");
         }
 
         function autoPlay() {
             const rounds = prompt("Quantas rodadas automáticas você deseja?", "10");
+            const delayBetweenRounds = turboMode ? 300 : 1000;
             for (let i = 0; i < rounds; i++) {
                 setTimeout(() => {
                     startGame();
-                }, turboMode ? 500 : 1000 * i);
+                }, delayBetweenRounds * i);
             }
+        }
+
+        function displayWinMessage(message) {
+            const winMessageElement = document.getElementById("winMessage");
+            winMessageElement.textContent = message;
+            winMessageElement.style.display = "block";
+            setTimeout(() => {
+                winMessageElement.style.display = "none";
+            }, 7000);  // A mensagem será exibida por 2 segundos
         }
 
         updateBankDisplay();
     </script>
 </body>
+
 </html>
