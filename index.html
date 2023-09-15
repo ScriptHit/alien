@@ -5,20 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jogo do Alien Script</title>
-<!DOCTYPE html>
-<html lang="pt-BR">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo do Alien Script</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Orbitron', sans-serif;
             background-image: linear-gradient(120deg, #7F00FF, #E100FF);
             display: flex;
             flex-direction: column;
@@ -36,6 +30,7 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-family: 'Orbitron', sans-serif;
         }
 
         #gameArea {
@@ -61,7 +56,11 @@
             font-size: 30px;
             background-color: #f9f9f9;
             opacity: 0;
-            transition: opacity 0.5s, background-color 0.3s;
+            transition: opacity 0.5s, background-color 0.3s, transform 0.5s;
+        }
+
+        .rotate-symbol {
+            transform: rotate(360deg);
         }
 
         button {
@@ -129,9 +128,11 @@
 
 <body>
     <h1>Script Alien 👽</h1>
-
     <div>
         Banca: R$ <span id="bankAmount">0,00</span>
+    </div>
+    <div>
+        Vitórias: <span id="winCount">0</span> | Derrotas: <span id="lossCount">0</span>
     </div>
     <div>
         Depositar: <input type="number" id="depositAmount" value="10"> Reais <button onclick="deposit()">Depositar</button>
@@ -141,7 +142,6 @@
     </div>
 
     <div id="gameArea">
-        <!-- 9 símbolos na grade 3x3 -->
         <div class="symbol" id="s0"></div>
         <div class="symbol" id="s1"></div>
         <div class="symbol" id="s2"></div>
@@ -157,7 +157,6 @@
     <button onclick="toggleTurbo()">Modo Turbo</button>
     <button onclick="autoPlay()">Modo Automático</button>
 
-    <!-- Mensagem de vitória -->
     <div id="winMessage"></div>
 
     <script>
@@ -165,6 +164,8 @@
         const payouts = [3, 5, 8, 10, 25, 100, 250];
         let turboMode = false;
         let bank = 0;
+        let winCount = 0;
+        let lossCount = 0;
         const startButton = document.getElementById("startButton");
 
         function formatToBRL(value) {
@@ -173,6 +174,11 @@
 
         function updateBankDisplay() {
             document.getElementById("bankAmount").innerText = formatToBRL(bank);
+        }
+
+        function updateWinLossDisplay() {
+            document.getElementById("winCount").innerText = winCount;
+            document.getElementById("lossCount").innerText = lossCount;
         }
 
         function deposit() {
@@ -202,6 +208,7 @@
                 setTimeout(() => {
                     symbolElement.innerText = getRandomSymbol();
                     symbolElement.style.opacity = 1;
+                    symbolElement.classList.add("rotate-symbol");
                 }, symbolDelay);
             }
 
@@ -211,76 +218,68 @@
             }, turboMode ? 250 : 500);
         }
 
-function checkWin(betValue) {
-    let hasWon = false;
+        function checkWin(betValue) {
+            let hasWon = false;
 
-    // Linhas horizontais
-    for (let i = 0; i < 3; i++) {
-        hasWon = hasWon || checkSymbolsForWin(i*3, i*3 + 1, i*3 + 2, betValue);
-    }
+            for (let i = 0; i < 3; i++) {
+                hasWon = hasWon || checkSymbolsForWin(i*3, i*3 + 1, i*3 + 2, betValue);
+            }
 
-    // Linhas verticais
-    for (let i = 0; i < 3; i++) {
-        hasWon = hasWon || checkSymbolsForWin(i, i + 3, i + 6, betValue);
-    }
+            for (let i = 0; i < 3; i++) {
+                hasWon = hasWon || checkSymbolsForWin(i, i + 3, i + 6, betValue);
+            }
 
-    // Linhas diagonais
-    hasWon = hasWon || checkSymbolsForWin(0, 4, 8, betValue);
-    hasWon = hasWon || checkSymbolsForWin(2, 4, 6, betValue);
+            hasWon = hasWon || checkSymbolsForWin(0, 4, 8, betValue);
+            hasWon = hasWon || checkSymbolsForWin(2, 4, 6, betValue);
 
-    const delay = turboMode ? 1000 : 3000;
-    setTimeout(() => {
-        startButton.disabled = false;
-    }, hasWon ? delay : 0);
-}
+            if (hasWon) {
+                winCount++;
+            } else {
+                lossCount++;
+            }
+            updateWinLossDisplay();
 
-function checkSymbolsForWin(pos1, pos2, pos3, betValue) {
-    const symbol1 = document.getElementById(`s${pos1}`).innerText;
-    const symbol2 = document.getElementById(`s${pos2}`).innerText;
-    const symbol3 = document.getElementById(`s${pos3}`).innerText;
-    
-    if (symbol1 === symbol2 && symbol1 === symbol3) {
-        highlightWinningSymbols(pos1, pos2, pos3);
-        const winAmount = betValue * payouts[symbols.indexOf(symbol1)];
-        bank += winAmount;
-        const winMultiplier = payouts[symbols.indexOf(symbol1)];
-        const winMessage = `Você apostou R$ ${formatToBRL(betValue)} e ganhou R$ ${formatToBRL(winAmount)} com ${symbol1}! (${winMultiplier}x)`;
-        displayWinMessage(winMessage);
-        return true;
-    }
-    return false;
-}
-
-function highlightWinningSymbols(pos1, pos2, pos3) {
-    document.getElementById(`s${pos1}`).style.backgroundColor = "#ffeb3b";
-    document.getElementById(`s${pos2}`).style.backgroundColor = "#ffeb3b";
-    document.getElementById(`s${pos3}`).style.backgroundColor = "#ffeb3b";
-    setTimeout(() => {
-        document.getElementById(`s${pos1}`).style.backgroundColor = "#f9f9f9";
-        document.getElementById(`s${pos2}`).style.backgroundColor = "#f9f9f9";
-        document.getElementById(`s${pos3}`).style.backgroundColor = "#f9f9f9";
-    }, turboMode ? 1000 : 2000);
-}
-
-function autoPlay() {
-    const rounds = prompt("Quantas rodadas automáticas você deseja?", "10");
-    const delayBetweenRounds = turboMode ? 300 : 1000;
-    let completedRounds = 0;
-    const autoPlayInterval = setInterval(() => {
-        startGame();
-        completedRounds++;
-        if (completedRounds >= rounds) {
-            clearInterval(autoPlayInterval);
+            const delay = turboMode ? 1000 : 3000;
+            setTimeout(() => {
+                startButton.disabled = false;
+            }, hasWon ? delay : 0);
         }
-    }, delayBetweenRounds);
-}
+
+        function checkSymbolsForWin(pos1, pos2, pos3, betValue) {
+            const symbol1 = document.getElementById(`s${pos1}`).innerText;
+            const symbol2 = document.getElementById(`s${pos2}`).innerText;
+            const symbol3 = document.getElementById(`s${pos3}`).innerText;
+            
+            if (symbol1 === symbol2 && symbol1 === symbol3) {
+                highlightWinningSymbols(pos1, pos2, pos3);
+                const winAmount = betValue * payouts[symbols.indexOf(symbol1)];
+                bank += winAmount;
+                const winMultiplier = payouts[symbols.indexOf(symbol1)];
+                const winMessage = `Você apostou R$ ${formatToBRL(betValue)} e ganhou R$ ${formatToBRL(winAmount)} com ${symbol1}! (${winMultiplier}x)`;
+                displayWinMessage(winMessage);
+                return true;
+            }
+            return false;
+        }
+
+        function highlightWinningSymbols(pos1, pos2, pos3) {
+            document.getElementById(`s${pos1}`).style.backgroundColor = "#ffeb3b";
+            document.getElementById(`s${pos2}`).style.backgroundColor = "#ffeb3b";
+            document.getElementById(`s${pos3}`).style.backgroundColor = "#ffeb3b";
+            setTimeout(() => {
+                document.getElementById(`s${pos1}`).style.backgroundColor = "#f9f9f9";
+                document.getElementById(`s${pos2}`).style.backgroundColor = "#f9f9f9";
+                document.getElementById(`s${pos3}`).style.backgroundColor = "#f9f9f9";
+            }, turboMode ? 1000 : 2000);
+        }
+
         function displayWinMessage(message) {
             const winMessageElement = document.getElementById("winMessage");
             winMessageElement.textContent = message;
             winMessageElement.style.display = "block";
             setTimeout(() => {
                 winMessageElement.style.display = "none";
-            }, 7000);  // A mensagem será exibida por 2 segundos
+            }, 7000);
         }
 
         updateBankDisplay();
