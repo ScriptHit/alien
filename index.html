@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jogo do Alien Script</title>
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo do Alien Script</title>
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -12,7 +19,7 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            background-image: linear-gradient(120deg, #D35400 0%, #E67E22 100%);
+            background-image: linear-gradient(120deg, #7F00FF, #E100FF);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -22,12 +29,13 @@
         h1 {
             color: #fff;
             background-color: #333;
-            padding: 10px 20px;
-            border-radius: 10px;
+            padding: 15px 25px;
+            border-radius: 15px;
             margin-bottom: 30px;
-            font-size: 28px;
+            font-size: 32px;
             text-transform: uppercase;
             letter-spacing: 2px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         #gameArea {
@@ -36,9 +44,10 @@
             gap: 15px;
             margin-bottom: 20px;
             border: 3px solid #555;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 20px;
+            border-radius: 15px;
             background-color: #eee;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .symbol {
@@ -48,53 +57,59 @@
             align-items: center;
             justify-content: center;
             border: 2px solid #bbb;
-            border-radius: 10px;
-            font-size: 28px;
+            border-radius: 15px;
+            font-size: 30px;
             background-color: #f9f9f9;
             opacity: 0;
-            transition: opacity 0.5s;
+            transition: opacity 0.5s, background-color 0.3s;
         }
 
         button {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             background-color: #555;
             color: #fff;
             cursor: pointer;
-            margin: 5px;
-            transition: background-color 0.3s;
+            margin: 8px;
+            font-size: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.2s;
         }
 
         button:hover {
             background-color: #777;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
         }
 
         input[type="number"] {
-            padding: 5px;
+            padding: 8px;
             border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-right: 10px;
+            border-radius: 8px;
+            margin-right: 15px;
+            font-size: 16px;
         }
 
         div {
             margin-bottom: 20px;
             background-color: #fff;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-    
 
-        /* Estilos para a mensagem de vitória */
         #winMessage {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            padding: 20px;
+            padding: 25px;
             background-color: #ffeb3b;
-            border-radius: 10px;
+            border-radius: 15px;
             box-shadow: 0px 0px 15px 2px rgba(0, 0, 0, 0.2);
             font-size: 24px;
             text-align: center;
@@ -196,54 +211,69 @@
             }, turboMode ? 250 : 500);
         }
 
-        function checkWin(betValue) {
-            let hasWon = false;
-            for (let i = 0; i < 3; i++) {
-                const symbol = document.getElementById(`s${i*3}`).innerText;
-                if (symbol === document.getElementById(`s${i*3 + 1}`).innerText &&
-                    symbol === document.getElementById(`s${i*3 + 2}`).innerText) {
-                    hasWon = true;
-                    highlightWinningRow(i);
-                    const winAmount = betValue * payouts[symbols.indexOf(symbol)];
-                    bank += winAmount;
-                    const winMultiplier = payouts[symbols.indexOf(symbol)];
-                    const winMessage = `Você apostou R$ ${formatToBRL(betValue)} e ganhou R$ ${formatToBRL(winAmount)} com ${symbol} na linha ${i+1}! (${winMultiplier}x)`;
-                    displayWinMessage(winMessage);
-                }
-            }
+function checkWin(betValue) {
+    let hasWon = false;
 
-            const delay = turboMode ? 1000 : 3000;
-            setTimeout(() => {
-                startButton.disabled = false;
-            }, hasWon ? delay : 0);
+    // Linhas horizontais
+    for (let i = 0; i < 3; i++) {
+        hasWon = hasWon || checkSymbolsForWin(i*3, i*3 + 1, i*3 + 2, betValue);
+    }
+
+    // Linhas verticais
+    for (let i = 0; i < 3; i++) {
+        hasWon = hasWon || checkSymbolsForWin(i, i + 3, i + 6, betValue);
+    }
+
+    // Linhas diagonais
+    hasWon = hasWon || checkSymbolsForWin(0, 4, 8, betValue);
+    hasWon = hasWon || checkSymbolsForWin(2, 4, 6, betValue);
+
+    const delay = turboMode ? 1000 : 3000;
+    setTimeout(() => {
+        startButton.disabled = false;
+    }, hasWon ? delay : 0);
+}
+
+function checkSymbolsForWin(pos1, pos2, pos3, betValue) {
+    const symbol1 = document.getElementById(`s${pos1}`).innerText;
+    const symbol2 = document.getElementById(`s${pos2}`).innerText;
+    const symbol3 = document.getElementById(`s${pos3}`).innerText;
+    
+    if (symbol1 === symbol2 && symbol1 === symbol3) {
+        highlightWinningSymbols(pos1, pos2, pos3);
+        const winAmount = betValue * payouts[symbols.indexOf(symbol1)];
+        bank += winAmount;
+        const winMultiplier = payouts[symbols.indexOf(symbol1)];
+        const winMessage = `Você apostou R$ ${formatToBRL(betValue)} e ganhou R$ ${formatToBRL(winAmount)} com ${symbol1}! (${winMultiplier}x)`;
+        displayWinMessage(winMessage);
+        return true;
+    }
+    return false;
+}
+
+function highlightWinningSymbols(pos1, pos2, pos3) {
+    document.getElementById(`s${pos1}`).style.backgroundColor = "#ffeb3b";
+    document.getElementById(`s${pos2}`).style.backgroundColor = "#ffeb3b";
+    document.getElementById(`s${pos3}`).style.backgroundColor = "#ffeb3b";
+    setTimeout(() => {
+        document.getElementById(`s${pos1}`).style.backgroundColor = "#f9f9f9";
+        document.getElementById(`s${pos2}`).style.backgroundColor = "#f9f9f9";
+        document.getElementById(`s${pos3}`).style.backgroundColor = "#f9f9f9";
+    }, turboMode ? 1000 : 2000);
+}
+
+function autoPlay() {
+    const rounds = prompt("Quantas rodadas automáticas você deseja?", "10");
+    const delayBetweenRounds = turboMode ? 300 : 1000;
+    let completedRounds = 0;
+    const autoPlayInterval = setInterval(() => {
+        startGame();
+        completedRounds++;
+        if (completedRounds >= rounds) {
+            clearInterval(autoPlayInterval);
         }
-
-        function highlightWinningRow(row) {
-            for (let i = 0; i < 3; i++) {
-                document.getElementById(`s${row*3 + i}`).style.backgroundColor = "#ffeb3b";
-            }
-            setTimeout(() => {
-                for (let i = 0; i < 3; i++) {
-                    document.getElementById(`s${row*3 + i}`).style.backgroundColor = "#f9f9f9";
-                }
-            }, turboMode ? 1000 : 2000);
-        }
-
-        function toggleTurbo() {
-            turboMode = !turboMode;
-            alert(turboMode ? "🚀 Modo Turbo Ativado!" : "🐌 Modo Turbo Desativado!");
-        }
-
-        function autoPlay() {
-            const rounds = prompt("Quantas rodadas automáticas você deseja?", "10");
-            const delayBetweenRounds = turboMode ? 300 : 1000;
-            for (let i = 0; i < rounds; i++) {
-                setTimeout(() => {
-                    startGame();
-                }, delayBetweenRounds * i);
-            }
-        }
-
+    }, delayBetweenRounds);
+}
         function displayWinMessage(message) {
             const winMessageElement = document.getElementById("winMessage");
             winMessageElement.textContent = message;
